@@ -8,9 +8,10 @@ const Select = (props) => {
 	return (
 		<div>
 			<FormLabel htmlFor={name}>{name}</FormLabel>
-			<Field className="form-control">
-				{({ form }) => {
+			<Field name={name} className="form-control">
+				{({ form, field }) => {
 					const { setFieldValue } = form;
+					const { value } = field;
 					return (
 						<select
 							className="form-control"
@@ -20,11 +21,10 @@ const Select = (props) => {
 							onChange={(e) => {
 								if (name === "state") {
 									onChange(e.target.value);
-									setFieldValue("state", e.target.value);
-								} else {
-									setFieldValue("city", e.target.value);
 								}
+								setFieldValue(name, e.target.value);
 							}}
+							value={value}
 						>
 							<option key={"Select An Option"} value={""}>
 								Select An Option

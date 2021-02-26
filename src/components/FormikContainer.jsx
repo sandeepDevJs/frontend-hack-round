@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Button } from "react-bootstrap";
 import FormikControl from "./FormikControl";
 import Message from "./Message";
+import Loader from "./Loader";
 import {
 	postCompDataAction,
 	putCompDataAction,
+	getCompDataAction,
 } from "../actions/companyActions";
 import {
 	POST_COMPANY_DATA_RESET,
@@ -15,7 +17,24 @@ import {
 } from "../constants/companyConstants";
 
 const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
+	const dropDownOptionsForState = [
+		{
+			key: "Maharashtra",
+			value: "Maharashtra",
+		},
+		{
+			key: "Delhi",
+			value: "Delhi",
+		},
+		{
+			key: "UP",
+			value: "UP",
+		},
+	];
+
 	let initialValues = {};
+
+	//if isEdit set to true then set initialValues to provided data
 	if (isEdit) {
 		initialValues = initVals;
 	} else {
@@ -50,46 +69,11 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 		logo: Yup.mixed().required("logo image is requird"),
 	});
 
-	const dropDownOptionsForState = [
-		{ key: "Maharashtra", value: "Maharashtra" },
-		{ key: "Delhi", value: "Delhi" },
-		{ key: "UP", value: "UP" },
-	];
-
-	const [city, setCity] = useState([{ key: "Select State First!", value: "" }]);
-
-	const setDropDownOptionsForCity = (state) => {
-		switch (state) {
-			case "Maharashtra":
-				setCity([
-					{ key: "Mumbai", value: "Mumbai" },
-					{ key: "Navi Mumbai", value: "Navi Mumbai" },
-					{ key: "Pune", value: "Pune" },
-				]);
-				break;
-			case "Delhi":
-				setCity([
-					{ key: "Ghaziabad", value: "Ghaziabad" },
-					{ key: "Agra", value: "Agra" },
-					{ key: "Faridabad", value: "Faridabad" },
-				]);
-				break;
-			case "UP":
-				setCity([
-					{ key: "Pryagraj", value: "Pryagraj" },
-					{ key: "Noida", value: "Noida" },
-					{ key: "varanasi", value: "varanasi" },
-				]);
-				break;
-			default:
-				setCity([{ key: "Select State First!", value: "" }]);
-				break;
-		}
-	};
-
 	const { loading, success, error } = useSelector(
 		(state) => state.postCompData
 	);
+
+	const getCity = useSelector((state) => state.getCity);
 
 	const {
 		loading: putLoading,
@@ -108,17 +92,29 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 		fData.append("state", values.state);
 		fData.append("city", values.city);
 
+		//if update request
 		if (isEdit) {
 			dispatch(putCompDataAction(fData, compId));
 		} else {
 			dispatch(postCompDataAction(fData));
 		}
+		dispatch(getCompDataAction());
 	};
 
+	//clear previous data
 	useEffect(() => {
 		dispatch({ type: POST_COMPANY_DATA_RESET });
 		dispatch({ type: PUT_COMPANY_DATA_RESET });
-	}, []);
+	}, [dispatch]);
+
+	//in Edit Mode get State & set the city accordingly
+	useEffect(() => {
+		if (initVals) {
+			if (initVals.state) {
+				dispatch({ type: initVals.state });
+			}
+		}
+	}, [initVals, dispatch]);
 
 	return (
 		<Formik
@@ -129,7 +125,7 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 		>
 			{(formik) => (
 				<Form>
-					{(loading || putLoading) && <h1>Loading...</h1>}
+					{(loading || putLoading) && <Loader />}
 					{(error || putError) && <Message>{error || putError}</Message>}
 					{(success || putSuccess) && closeFun()}
 					<FormikControl
@@ -156,18 +152,20 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 						name="description"
 						label="Description"
 					/>
+
 					<FormikControl
 						control="select"
 						name="state"
-						label="Select State"
 						options={dropDownOptionsForState}
-						onChange={setDropDownOptionsForCity}
+						onChange={(val) => {
+							dispatch({ type: val });
+						}}
 					/>
 					<FormikControl
 						control="select"
 						name="city"
 						label="Select City"
-						options={city}
+						options={getCity}
 					/>
 
 					<FormikControl control="fileInput" name="logo" />
