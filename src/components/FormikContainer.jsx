@@ -1,18 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Button } from "react-bootstrap";
 import FormikControl from "./FormikControl";
+import Message from "./Message";
+import {
+	postCompDataAction,
+	putCompDataAction,
+} from "../actions/companyActions";
+import {
+	POST_COMPANY_DATA_RESET,
+	PUT_COMPANY_DATA_RESET,
+} from "../constants/companyConstants";
 
-const FormikContainer = () => {
-	const initialValues = {
-		name: "",
-		email: "",
-		contact: "",
-		description: "",
-		state: "",
-		city: "",
-	};
+const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
+	let initialValues = {};
+	if (isEdit) {
+		initialValues = initVals;
+	} else {
+		initialValues = {
+			name: "",
+			email: "",
+			contact: "",
+			description: "",
+			state: "",
+			city: "",
+			logo: "",
+		};
+	}
 	const validationSchema = Yup.object({
 		name: Yup.string()
 			.min(3, "Name Must At Least Contain 2 Characters")
@@ -31,6 +47,7 @@ const FormikContainer = () => {
 			.max(50, "State Name Cannot Be More Than 50 characters!")
 			.required("Required!"),
 		city: Yup.string().min(2).max(50).required("Required!"),
+		logo: Yup.mixed().required("logo image is requird"),
 	});
 
 	const dropDownOptionsForState = [
@@ -70,16 +87,51 @@ const FormikContainer = () => {
 		}
 	};
 
-	const onSubmit = (values) => console.log(values);
+	const { loading, success, error } = useSelector(
+		(state) => state.postCompData
+	);
+
+	const {
+		loading: putLoading,
+		success: putSuccess,
+		error: putError,
+	} = useSelector((state) => state.putCompData);
+	const dispatch = useDispatch();
+
+	const onSubmit = (values) => {
+		let fData = new FormData();
+		fData.append("logo", values.logo);
+		fData.append("name", values.name);
+		fData.append("description", values.description);
+		fData.append("email", values.email);
+		fData.append("contact", values.contact);
+		fData.append("state", values.state);
+		fData.append("city", values.city);
+
+		if (isEdit) {
+			dispatch(putCompDataAction(fData, compId));
+		} else {
+			dispatch(postCompDataAction(fData));
+		}
+	};
+
+	useEffect(() => {
+		dispatch({ type: POST_COMPANY_DATA_RESET });
+		dispatch({ type: PUT_COMPANY_DATA_RESET });
+	}, []);
 
 	return (
 		<Formik
+			enableReinitialize
 			initialValues={initialValues}
 			validationSchema={validationSchema}
 			onSubmit={onSubmit}
 		>
 			{(formik) => (
 				<Form>
+					{(loading || putLoading) && <h1>Loading...</h1>}
+					{(error || putError) && <Message>{error || putError}</Message>}
+					{(success || putSuccess) && closeFun()}
 					<FormikControl
 						control="input"
 						type="text"
@@ -95,7 +147,7 @@ const FormikContainer = () => {
 
 					<FormikControl
 						control="input"
-						type="number"
+						type="text"
 						name="contact"
 						label="Contact No."
 					/>
@@ -117,6 +169,9 @@ const FormikContainer = () => {
 						label="Select City"
 						options={city}
 					/>
+
+					<FormikControl control="fileInput" name="logo" />
+
 					<Button type="submit">Submit</Button>
 				</Form>
 			)}

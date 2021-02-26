@@ -9,7 +9,7 @@ const ModalBox = ({ showFlag, handleClose }) => {
 				<Modal.Title>Company Info Form</Modal.Title>
 			</Modal.Header>
 			<Modal.Body>
-				<FormikContainer />
+				<FormikContainer closeFun={handleClose} />
 			</Modal.Body>
 			<Modal.Footer>
 				<Button variant="secondary" onClick={handleClose}>
