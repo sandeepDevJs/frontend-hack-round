@@ -13,6 +13,22 @@ const ModalBox = ({ showFlag, handleClose, isEdit, compId }) => {
 		(state) => state.getCompDataById
 	);
 
+	const { success, loading: postLoading, error: postError } = useSelector(
+		(state) => state.postCompData
+	);
+
+	const {
+		success: putSuccess,
+		loading: putLoading,
+		error: putError,
+	} = useSelector((state) => state.putCompData);
+
+	useEffect(() => {
+		if (success || putSuccess) {
+			handleClose();
+		}
+	}, [success, putSuccess, handleClose]);
+
 	useEffect(() => {
 		if (isEdit) {
 			dispatch(getCompDataByIdAction(compId));
@@ -22,10 +38,14 @@ const ModalBox = ({ showFlag, handleClose, isEdit, compId }) => {
 	return (
 		<Modal show={showFlag} onHide={handleClose}>
 			<Modal.Header closeButton>
-				<Modal.Title>Company Info Form {loading && <Loader />}</Modal.Title>
+				<Modal.Title>
+					Company Info Form{" "}
+					{(loading || postLoading || putLoading) && <Loader />}
+				</Modal.Title>
 			</Modal.Header>
 			<Modal.Body>
 				{error && <Message>{error}</Message>}
+				{(putError || postError) && <Message>{putError || postError}</Message>}
 				{isEdit ? (
 					<FormikContainer
 						closeFun={handleClose}

@@ -70,7 +70,18 @@ export const getCompDataReducer = (state = {}, action) => {
 };
 
 export const getCompDataByIdReducer = (
-	state = { data: { _id: 0 } },
+	state = {
+		data: {
+			_id: 0,
+			name: "",
+			email: "",
+			contact: "",
+			description: "",
+			state: "",
+			city: "",
+			logo: "",
+		},
+	},
 	action
 ) => {
 	switch (action.type) {

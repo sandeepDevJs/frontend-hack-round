@@ -4,8 +4,7 @@ import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Button } from "react-bootstrap";
 import FormikControl from "./FormikControl";
-import Message from "./Message";
-import Loader from "./Loader";
+
 import {
 	postCompDataAction,
 	putCompDataAction,
@@ -69,17 +68,8 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 		logo: Yup.mixed().required("logo image is requird"),
 	});
 
-	const { loading, success, error } = useSelector(
-		(state) => state.postCompData
-	);
-
 	const getCity = useSelector((state) => state.getCity);
 
-	const {
-		loading: putLoading,
-		success: putSuccess,
-		error: putError,
-	} = useSelector((state) => state.putCompData);
 	const dispatch = useDispatch();
 
 	const onSubmit = (values) => {
@@ -125,9 +115,6 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 		>
 			{(formik) => (
 				<Form>
-					{(loading || putLoading) && <Loader />}
-					{(error || putError) && <Message>{error || putError}</Message>}
-					{(success || putSuccess) && closeFun()}
 					<FormikControl
 						control="input"
 						type="text"
@@ -171,6 +158,9 @@ const FormikContainer = ({ closeFun, isEdit, initVals, compId }) => {
 					<FormikControl control="fileInput" name="logo" />
 
 					<Button type="submit">Submit</Button>
+					<Button variant="secondary" onClick={() => closeFun()}>
+						Close
+					</Button>
 				</Form>
 			)}
 		</Formik>
